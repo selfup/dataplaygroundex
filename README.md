@@ -1,21 +1,12 @@
 # Friends
 
-**TODO: Add description**
-
-## Installation
-
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `friends` to your list of dependencies in `mix.exs`:
-
-```elixir
-def deps do
-  [
-    {:friends, "~> 0.1.0"}
-  ]
-end
+```bash
+docker-compose up
+mix exto.drop && mix ecto.create && mix ecto.migrate
+iex -S mix
 ```
 
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at [https://hexdocs.pm/friends](https://hexdocs.pm/friends).
-
+```elixir
+ok = :timer.tc(fn -> Friends.populate_redis end) |> elem(0); ok / 1000
+ok = :timer.tc(fn -> Friends.populate_pg end) |> elem(0); ok / 1000
+```
