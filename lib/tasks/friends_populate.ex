@@ -5,6 +5,12 @@ defmodule Mix.Tasks.Friends.Populate do
     :ok = Mix.Task.run("ecto.migrate")
     :ok = Mix.Task.run("app.start")
 
-    true = Friends.run()
+    micro_seconds =
+      :timer.tc(fn -> true = Friends.run() end)
+      |> elem(0)
+
+    milli_seconds = micro_seconds / 1000
+
+    IO.puts("Task took #{milli_seconds}ms to run!")
   end
 end
