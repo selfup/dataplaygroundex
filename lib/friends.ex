@@ -3,129 +3,61 @@ defmodule Friends do
   Documentation for Friends.
   """
 
-  def populate_pg() do
-    0..5_000
-    |> Enum.map(fn age ->
-      %Friends.Person{first_name: "Billy", last_name: "Joe", age: age}
-    end)
-    |> Task.async_stream(
-      fn person ->
-        Friends.Repo.insert(person)
-      end,
-      max_concurrency: 900
-    )
+  @length 5_000
+
+  def run() do
+    populate_pg()
+  end
+
+  defp populate_pg() do
+    populate_redis()
+    |> Task.async_stream(fn person -> redis_get(person) end)
+    |> Task.async_stream(fn {:ok, person} -> pg_insert(person) end)
+    |> Enum.map(fn {:ok, val} -> val end)
+    |> length() == @length
+  end
+
+  defp pg_insert(person) do
+    decoded = Jason.decode!(person)
+
+    payload = %Friends.Person{
+      first_name: decoded["first_name"],
+      last_name: decoded["last_name"],
+      age: decoded["age"]
+    }
+
+    Friends.Repo.insert(payload)
+  end
+
+  defp populate_redis() do
+    1..@length
+    |> Enum.map(fn age -> create_person(age) end)
+    |> Task.async_stream(fn person -> redis_set(person) end)
     |> Enum.map(fn {:ok, val} -> val end)
   end
 
-  def populate_redis() do
-    people =
-      0..10_000
-      |> Enum.map(fn age ->
-        %Friends.Person{first_name: "Billy", last_name: "Joe", age: age}
-      end)
-
-    people
-    |> Task.async_stream(
-      fn person ->
-        Redix.command(:redix, ["SET", to_string(person.age), "foo"])
-      end,
-      max_concurrency: 900
-    )
-    |> Enum.map(fn {:ok, val} -> val end)
-
-    people
-    |> Task.async_stream(
-      fn person ->
-        payload =
-          Jason.encode!(%{
-            key: person.age,
-            data: %{
-              first_name: person.first_name,
-              last_name: person.last_name
-            }
-          })
-
-        Redix.command(:redix, ["GET", to_string(person.age), payload])
-      end,
-      max_concurrency: 900
-    )
-    |> Enum.map(fn {:ok, val} -> val end)
+  defp create_person(age) do
+    %Friends.Person{first_name: "Billy", last_name: "Joe", age: age}
   end
 
-  def populate_smache_lb_api() do
-    people =
-      0..10_000
-      |> Enum.map(fn age ->
-        %Friends.Person{first_name: "Billy", last_name: "Joe", age: age}
-      end)
-
-    people
-    |> Task.async_stream(fn person ->
-      payload =
-        Jason.encode!(%{
-          key: person.age,
-          data: %{
-            first_name: person.first_name,
-            last_name: person.last_name
-          }
-        })
-
-      HTTPoison.post!(
-        "http://localhost:4000/api",
-        payload,
-        [{"Content-Type", "application/json"}],
-        hackney: [pool: :default]
-      )
-    end)
-    |> Enum.map(fn {:ok, val} -> val.body end)
-
-    people
-    |> Task.async_stream(
-      fn person ->
-        HTTPoison.get!("http://localhost:4000/api/?key=" <> to_string(person.age), [],
-          hackney: [pool: :default]
-        )
-      end,
-      max_concurrency: 900
-    )
-    |> Enum.map(fn {:ok, val} -> val.body end)
+  defp redis_get(person) do
+    case Redix.command(:redix, ["GET", to_string(person.age)]) do
+      {:ok, result} -> result
+    end
   end
 
-  defp rand_robin() do
-    :"operator_#{:rand.uniform(16)}"
-  end
+  defp redis_set(person) do
+    payload =
+      Jason.encode!(%{
+        age: person.age,
+        data: %{
+          first_name: person.first_name,
+          last_name: person.last_name
+        }
+      })
 
-  def populate_smache_rpc_distributed() do
-    # spin up smache locally
-    Node.connect(:smache@localhost)
+    Redix.command(:redix, ["SET", to_string(person.age), payload])
 
-    people =
-      0..10_000
-      |> Enum.map(fn age ->
-        %Friends.Person{first_name: "Billy", last_name: "Joe", age: age}
-      end)
-
-    people
-    |> Task.async_stream(fn person ->
-      GenServer.call(
-        {rand_robin(), :smache@localhost},
-        {:put_or_post,
-         {person.age,
-          %{
-            first_name: person.first_name,
-            last_name: person.last_name
-          }}}
-      )
-    end)
-    |> Enum.map(fn {:ok, val} -> val end)
-
-    people
-    |> Task.async_stream(
-      fn person ->
-        GenServer.call({rand_robin(), :smache@localhost}, {:get, {person.age}})
-      end,
-      max_concurrency: 900
-    )
-    |> Enum.map(fn {:ok, val} -> val end)
+    person
   end
 end

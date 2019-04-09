@@ -14,7 +14,7 @@ defmodule Friends.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [:logger, :httpoison],
+      extra_applications: [:logger],
       mod: {Friends.Application, []}
     ]
   end
@@ -25,7 +25,6 @@ defmodule Friends.MixProject do
       {:ecto_sql, "~> 3.0"},
       {:postgrex, ">= 0.0.0"},
       {:redix, ">= 0.0.0"},
-      {:httpoison, "~> 1.4"},
       {:jason, "~> 1.0"}
     ]
   end
