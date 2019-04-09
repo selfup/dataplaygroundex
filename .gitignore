@@ -24,3 +24,6 @@ friends-*.tar
 
 # docker volumes
 tmp
+
+# turn off dializer cuz beam goes nuts but ignore this dir
+.elixir_ls
