@@ -10,11 +10,12 @@ defmodule Friends do
   end
 
   defp populate_pg() do
-    populate_redis()
-    |> Task.async_stream(fn person -> redis_get(person) end)
-    |> Task.async_stream(fn {:ok, person} -> pg_insert(person) end)
-    |> Enum.map(fn {:ok, val} -> val end)
-    |> length() == @length
+    true =
+      populate_redis()
+      |> Task.async_stream(fn person -> redis_get(person) end)
+      |> Task.async_stream(fn {:ok, person} -> pg_insert(person) end)
+      |> Enum.map(fn {:ok, val} -> val end)
+      |> length() == @length
   end
 
   defp pg_insert(person) do
