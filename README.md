@@ -17,7 +17,7 @@ mix friends.populate
 
 [hexdocs for task.async_stream](https://hexdocs.pm/elixir/Task.html#async_stream/3)
 
-The old school way:
+**The Map/Task/async/await way (for the redis read and postgres create):**
 
 ```elixir
 defp populate_pg() do
@@ -27,10 +27,11 @@ defp populate_pg() do
   |> length() == @length
 end
 
-# takes about 20 seconds
+# On MacOS (docker ontop of a VM): takes about 20 seconds
+# On Linux (direct Kernel calls): takes about 8 seconds
 ```
 
-The new way:
+**The new way:**
 
 ```elixir
 defp populate_pg() do
@@ -41,5 +42,6 @@ defp populate_pg() do
   |> length() == @length
 end
 
-# takes about 8 seconds
+# On MacOS (docker ontop of a VM): takes about 8 seconds
+# On Linux (direct Kernel calls): takes about 1.5 seconds
 ```
