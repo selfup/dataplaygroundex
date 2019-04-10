@@ -13,9 +13,8 @@ mix friends.populate
 
 ### Task.async_stream/3
 
-[my blog post about task.async_stream](https://dom.events/2019/04/07/task-async-stream-in-elixir.html)
-
-[hexdocs for task.async_stream](https://hexdocs.pm/elixir/Task.html#async_stream/3)
+* [My micro blog post about Task.async_stream/3](https://dom.events/2019/04/07/task-async-stream-in-elixir.html)
+* [Hexdocs for Task.async_stream/3](https://hexdocs.pm/elixir/Task.html#async_stream/3)
 
 **The Map/Task/async/await way (for the redis read and postgres create):**
 
