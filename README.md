@@ -13,6 +13,10 @@ mix friends.populate
 
 ### Task.async_stream/3
 
+[my blog post about task.async_stream](https://dom.events/2019/04/07/task-async-stream-in-elixir.html)
+
+[hexdocs for task.async_stream](https://hexdocs.pm/elixir/Task.html#async_stream/3)
+
 The old school way:
 
 ```elixir
